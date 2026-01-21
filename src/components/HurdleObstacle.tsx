@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Rect, Line } from 'react-native-svg';
-import { HURDLE_WIDTH, HURDLE_GAP, GAME_HEIGHT, GROUND_HEIGHT } from '../constants/game';
+import { HURDLE_WIDTH, GAME_HEIGHT, GROUND_HEIGHT } from '../constants/game';
 import { Hurdle } from '../types/game';
 
 interface HurdleObstacleProps {
@@ -9,8 +9,7 @@ interface HurdleObstacleProps {
 }
 
 export const HurdleObstacle: React.FC<HurdleObstacleProps> = ({ hurdle }) => {
-  const topHurdleHeight = hurdle.gapY;
-  const bottomHurdleHeight = GAME_HEIGHT - GROUND_HEIGHT - hurdle.gapY - HURDLE_GAP;
+  const hurdleY = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height;
 
   return (
     <View
@@ -18,81 +17,41 @@ export const HurdleObstacle: React.FC<HurdleObstacleProps> = ({ hurdle }) => {
         styles.container,
         {
           left: hurdle.x,
+          top: hurdleY,
+          height: hurdle.height,
         },
       ]}
     >
-      {/* Top Hurdle */}
-      <View style={[styles.hurdle, { height: topHurdleHeight }]}>
-        <Svg width={HURDLE_WIDTH} height={topHurdleHeight} viewBox={`0 0 ${HURDLE_WIDTH} ${topHurdleHeight}`}>
-          <Rect
-            x="0"
-            y="0"
-            width={HURDLE_WIDTH}
-            height={topHurdleHeight}
-            fill="#8B4513"
+      <Svg width={HURDLE_WIDTH} height={hurdle.height} viewBox={`0 0 ${HURDLE_WIDTH} ${hurdle.height}`}>
+        {/* Main obstacle body */}
+        <Rect
+          x="0"
+          y="0"
+          width={HURDLE_WIDTH}
+          height={hurdle.height}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="2"
+        />
+        {/* Decorative lines for texture */}
+        {Array.from({ length: Math.max(1, Math.floor(hurdle.height / 15)) }).map((_, i) => (
+          <Line
+            key={i}
+            x1="5"
+            y1={i * 15 + 10}
+            x2={HURDLE_WIDTH - 5}
+            y2={i * 15 + 10}
             stroke="#654321"
-            strokeWidth="2"
+            strokeWidth="1.5"
           />
-          {/* Horizontal bars */}
-          {Array.from({ length: Math.floor(topHurdleHeight / 20) }).map((_, i) => (
-            <Line
-              key={i}
-              x1="0"
-              y1={i * 20}
-              x2={HURDLE_WIDTH}
-              y2={i * 20}
-              stroke="#654321"
-              strokeWidth="2"
-            />
-          ))}
-        </Svg>
-      </View>
-
-      {/* Bottom Hurdle */}
-      <View
-        style={[
-          styles.hurdle,
-          {
-            height: bottomHurdleHeight,
-            top: topHurdleHeight + HURDLE_GAP,
-          },
-        ]}
-      >
-        <Svg width={HURDLE_WIDTH} height={bottomHurdleHeight} viewBox={`0 0 ${HURDLE_WIDTH} ${bottomHurdleHeight}`}>
-          <Rect
-            x="0"
-            y="0"
-            width={HURDLE_WIDTH}
-            height={bottomHurdleHeight}
-            fill="#8B4513"
-            stroke="#654321"
-            strokeWidth="2"
-          />
-          {/* Horizontal bars */}
-          {Array.from({ length: Math.floor(bottomHurdleHeight / 20) }).map((_, i) => (
-            <Line
-              key={i}
-              x1="0"
-              y1={i * 20}
-              x2={HURDLE_WIDTH}
-              y2={i * 20}
-              stroke="#654321"
-              strokeWidth="2"
-            />
-          ))}
-        </Svg>
-      </View>
+        ))}
+      </Svg>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    width: HURDLE_WIDTH,
-    height: GAME_HEIGHT,
-  },
-  hurdle: {
     position: 'absolute',
     width: HURDLE_WIDTH,
   },

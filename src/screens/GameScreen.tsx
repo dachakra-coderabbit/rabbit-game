@@ -20,7 +20,7 @@ export const GameScreen: React.FC = () => {
     <View style={styles.container}>
       <StatusBar style="light" />
       <Pressable style={styles.gameArea} onPress={jump}>
-        <Background />
+        <Background isPlaying={gameState === 'playing'} />
 
         {/* Hurdles */}
         {hurdles.map((hurdle) => (
@@ -38,10 +38,10 @@ export const GameScreen: React.FC = () => {
         {/* Start Screen */}
         {gameState === 'idle' && (
           <View style={styles.overlay}>
-            <Text style={styles.title}>Rabbit Jump</Text>
+            <Text style={styles.title}>Rabbit Runner</Text>
             <Text style={styles.subtitle}>Tap to Start</Text>
             <Text style={styles.instructions}>
-              Tap anywhere to make the rabbit jump through hurdles!
+              Tap anywhere to make the rabbit jump over obstacles!
             </Text>
           </View>
         )}

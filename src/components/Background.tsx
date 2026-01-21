@@ -1,43 +1,89 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Rect, Path, Circle } from 'react-native-svg';
-import { GAME_WIDTH, GAME_HEIGHT, GROUND_HEIGHT } from '../constants/game';
+import { GAME_WIDTH, GAME_HEIGHT, GROUND_HEIGHT, HURDLE_SPEED } from '../constants/game';
 
-export const Background: React.FC = () => {
+interface BackgroundProps {
+  isPlaying?: boolean;
+}
+
+export const Background: React.FC<BackgroundProps> = ({ isPlaying = false }) => {
+  const [groundOffset, setGroundOffset] = useState(0);
+  const [cloudOffset, setCloudOffset] = useState(0);
+
+  useEffect(() => {
+    if (!isPlaying) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setGroundOffset((prev) => (prev + HURDLE_SPEED) % GAME_WIDTH);
+      setCloudOffset((prev) => (prev + HURDLE_SPEED * 0.3) % GAME_WIDTH);
+    }, 1000 / 60);
+
+    return () => clearInterval(interval);
+  }, [isPlaying]);
+
   return (
     <View style={styles.container}>
       {/* Sky */}
       <View style={styles.sky} />
 
-      {/* Clouds */}
-      <Svg width={GAME_WIDTH} height={200} style={styles.clouds}>
-        <Circle cx="80" cy="50" r="25" fill="#FFF" opacity="0.8" />
-        <Circle cx="110" cy="50" r="30" fill="#FFF" opacity="0.8" />
-        <Circle cx="140" cy="50" r="25" fill="#FFF" opacity="0.8" />
+      {/* Scrolling Clouds */}
+      <View style={styles.cloudsContainer}>
+        {[0, 1].map((index) => (
+          <Svg
+            key={index}
+            width={GAME_WIDTH}
+            height={200}
+            style={[
+              styles.clouds,
+              {
+                transform: [{ translateX: -cloudOffset + index * GAME_WIDTH }],
+              },
+            ]}
+          >
+            <Circle cx="80" cy="50" r="25" fill="#FFF" opacity="0.8" />
+            <Circle cx="110" cy="50" r="30" fill="#FFF" opacity="0.8" />
+            <Circle cx="140" cy="50" r="25" fill="#FFF" opacity="0.8" />
 
-        <Circle cx="280" cy="80" r="25" fill="#FFF" opacity="0.7" />
-        <Circle cx="310" cy="80" r="30" fill="#FFF" opacity="0.7" />
-        <Circle cx="340" cy="80" r="25" fill="#FFF" opacity="0.7" />
-      </Svg>
+            <Circle cx="280" cy="80" r="25" fill="#FFF" opacity="0.7" />
+            <Circle cx="310" cy="80" r="30" fill="#FFF" opacity="0.7" />
+            <Circle cx="340" cy="80" r="25" fill="#FFF" opacity="0.7" />
+          </Svg>
+        ))}
+      </View>
 
-      {/* Grass/Ground */}
+      {/* Scrolling Ground */}
       <View style={styles.ground}>
-        <Svg width={GAME_WIDTH} height={GROUND_HEIGHT}>
-          {/* Ground */}
-          <Rect x="0" y="0" width={GAME_WIDTH} height={GROUND_HEIGHT} fill="#8B7355" />
+        {[0, 1, 2].map((index) => (
+          <Svg
+            key={index}
+            width={GAME_WIDTH}
+            height={GROUND_HEIGHT}
+            style={[
+              styles.groundTile,
+              {
+                transform: [{ translateX: -groundOffset + index * GAME_WIDTH }],
+              },
+            ]}
+          >
+            {/* Ground */}
+            <Rect x="0" y="0" width={GAME_WIDTH} height={GROUND_HEIGHT} fill="#8B7355" />
 
-          {/* Grass on top */}
-          <Rect x="0" y="0" width={GAME_WIDTH} height="20" fill="#228B22" />
+            {/* Grass on top */}
+            <Rect x="0" y="0" width={GAME_WIDTH} height="20" fill="#228B22" />
 
-          {/* Grass blades */}
-          {Array.from({ length: Math.floor(GAME_WIDTH / 15) }).map((_, i) => (
-            <Path
-              key={i}
-              d={`M ${i * 15} 20 Q ${i * 15 + 3} 10, ${i * 15 + 6} 20`}
-              fill="#32CD32"
-            />
-          ))}
-        </Svg>
+            {/* Grass blades */}
+            {Array.from({ length: Math.floor(GAME_WIDTH / 15) }).map((_, i) => (
+              <Path
+                key={i}
+                d={`M ${i * 15} 20 Q ${i * 15 + 3} 10, ${i * 15 + 6} 20`}
+                fill="#32CD32"
+              />
+            ))}
+          </Svg>
+        ))}
       </View>
     </View>
   );
@@ -54,14 +100,24 @@ const styles = StyleSheet.create({
     height: GAME_HEIGHT - GROUND_HEIGHT,
     backgroundColor: '#87CEEB',
   },
-  clouds: {
+  cloudsContainer: {
     position: 'absolute',
     top: 50,
+    width: GAME_WIDTH,
+    height: 200,
+    overflow: 'hidden',
+  },
+  clouds: {
+    position: 'absolute',
   },
   ground: {
     position: 'absolute',
     bottom: 0,
     width: GAME_WIDTH,
     height: GROUND_HEIGHT,
+    overflow: 'hidden',
+  },
+  groundTile: {
+    position: 'absolute',
   },
 });

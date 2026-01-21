@@ -6,6 +6,9 @@ import {
   HURDLE_SPEED,
   HURDLE_SPACING,
   GAME_WIDTH,
+  GAME_HEIGHT,
+  GROUND_HEIGHT,
+  RABBIT_HEIGHT,
 } from '../constants/game';
 import { Rabbit, Hurdle, GameState } from '../types/game';
 import { applyGravity, checkCollision, generateHurdle } from '../utils/physics';
@@ -44,11 +47,18 @@ export const useGameLoop = () => {
     }
 
     if (gameState === 'playing') {
-      setRabbit((prev) => ({
-        ...prev,
-        velocity: { ...prev.velocity, y: JUMP_VELOCITY },
-        rotation: -20,
-      }));
+      setRabbit((prev) => {
+        const groundY = GAME_HEIGHT - GROUND_HEIGHT - RABBIT_HEIGHT;
+        // Only allow jump when on the ground
+        if (prev.position.y >= groundY) {
+          return {
+            ...prev,
+            velocity: { ...prev.velocity, y: JUMP_VELOCITY },
+            rotation: -15,
+          };
+        }
+        return prev;
+      });
     }
   }, [gameState, initializeGame]);
 
