@@ -17,7 +17,7 @@ export interface Rabbit {
 export interface Hurdle {
   id: string;
   x: number;
-  gapY: number;
+  height: number;
   passed: boolean;
 }
 
