@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Rabbit Jump",
+    "slug": "rabbit-game",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#87CEEB"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.rabbithop.game"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#87CEEB"
+      },
+      "package": "com.rabbithop.game"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    }
+  }
+}
