@@ -10,8 +10,8 @@ import {
   GROUND_HEIGHT,
   RABBIT_HEIGHT,
 } from '../constants/game';
-import { Rabbit, Hurdle, GameState } from '../types/game';
-import { applyGravity, checkCollision, generateHurdle } from '../utils/physics';
+import { Rabbit, Hurdle, Coin, GameState } from '../types/game';
+import { applyGravity, checkCollision, generateHurdle, generateCoin, checkCoinCollision } from '../utils/physics';
 
 export const useGameLoop = () => {
   const [gameState, setGameState] = useState<GameState>('idle');
@@ -22,9 +22,11 @@ export const useGameLoop = () => {
     rotation: 0,
   });
   const [hurdles, setHurdles] = useState<Hurdle[]>([]);
+  const [coins, setCoins] = useState<Coin[]>([]);
 
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const hurdleIdCounter = useRef(0);
+  const coinIdCounter = useRef(0);
 
   const initializeGame = useCallback(() => {
     setRabbit({
@@ -36,6 +38,11 @@ export const useGameLoop = () => {
       generateHurdle(GAME_WIDTH, hurdleIdCounter.current++),
       generateHurdle(GAME_WIDTH + HURDLE_SPACING, hurdleIdCounter.current++),
       generateHurdle(GAME_WIDTH + HURDLE_SPACING * 2, hurdleIdCounter.current++),
+    ]);
+    setCoins([
+      generateCoin(GAME_WIDTH + HURDLE_SPACING * 0.5, coinIdCounter.current++),
+      generateCoin(GAME_WIDTH + HURDLE_SPACING * 1.5, coinIdCounter.current++),
+      generateCoin(GAME_WIDTH + HURDLE_SPACING * 2.5, coinIdCounter.current++),
     ]);
     setScore(0);
   }, []);
@@ -95,6 +102,26 @@ export const useGameLoop = () => {
           return filteredHurdles;
         });
 
+        setCoins((prevCoins) => {
+          const updatedCoins = prevCoins.map((coin) => ({
+            ...coin,
+            x: coin.x - HURDLE_SPEED,
+          }));
+
+          // Remove off-screen coins and add new ones
+          const filteredCoins = updatedCoins.filter((coin) => coin.x > -100);
+
+          // Add new coin if needed
+          if (filteredCoins.length < 3) {
+            const lastCoin = filteredCoins[filteredCoins.length - 1];
+            filteredCoins.push(
+              generateCoin(lastCoin.x + HURDLE_SPACING, coinIdCounter.current++)
+            );
+          }
+
+          return filteredCoins;
+        });
+
         // Update score
         setHurdles((prevHurdles) => {
           return prevHurdles.map((hurdle) => {
@@ -124,6 +151,22 @@ export const useGameLoop = () => {
     }
   }, [rabbit, hurdles, gameState]);
 
+  // Check coin collection
+  useEffect(() => {
+    if (gameState === 'playing') {
+      const collectedCoinIds = checkCoinCollision(rabbit, coins);
+      if (collectedCoinIds.length > 0) {
+        setCoins((prevCoins) =>
+          prevCoins.map((coin) =>
+            collectedCoinIds.includes(coin.id) ? { ...coin, collected: true } : coin
+          )
+        );
+        // Add 10 points for each coin collected
+        setScore((prevScore) => prevScore + (collectedCoinIds.length * 10));
+      }
+    }
+  }, [rabbit, coins, gameState]);
+
   useEffect(() => {
     initializeGame();
   }, []);
@@ -133,6 +176,7 @@ export const useGameLoop = () => {
     score,
     rabbit,
     hurdles,
+    coins,
     jump,
     restart,
   };

@@ -8,7 +8,19 @@ import {
   GAME_HEIGHT,
   GROUND_HEIGHT,
 } from '../constants/game';
-import { Rabbit, Hurdle } from '../types/game';
+import { Rabbit, Hurdle, Coin, CoinLabel } from '../types/game';
+
+const COIN_LABELS: CoinLabel[] = [
+  'MCP',
+  'Ticket',
+  'Cloned Repo',
+  'Learning',
+  '.MD files',
+  'SAST',
+  'CodeRabbit Configs',
+];
+
+const COIN_SIZE = 50;
 
 export const applyGravity = (rabbit: Rabbit): Rabbit => {
   const groundY = GAME_HEIGHT - GROUND_HEIGHT - RABBIT_HEIGHT;
@@ -76,4 +88,51 @@ export const generateHurdle = (lastHurdleX: number, id: number): Hurdle => {
     height,
     passed: false,
   };
+};
+
+export const generateCoin = (x: number, id: number): Coin => {
+  const randomLabel = COIN_LABELS[Math.floor(Math.random() * COIN_LABELS.length)];
+
+  // Random height for coin placement (in the air, where the rabbit can jump to get it)
+  const minY = GAME_HEIGHT - GROUND_HEIGHT - 200;
+  const maxY = GAME_HEIGHT - GROUND_HEIGHT - 100;
+  const y = Math.random() * (maxY - minY) + minY;
+
+  return {
+    id: id.toString(),
+    x,
+    y,
+    label: randomLabel,
+    collected: false,
+  };
+};
+
+export const checkCoinCollision = (rabbit: Rabbit, coins: Coin[]): string[] => {
+  const rabbitLeft = rabbit.position.x;
+  const rabbitRight = rabbit.position.x + RABBIT_WIDTH;
+  const rabbitTop = rabbit.position.y;
+  const rabbitBottom = rabbit.position.y + RABBIT_HEIGHT;
+
+  const collectedCoinIds: string[] = [];
+
+  for (const coin of coins) {
+    if (coin.collected) continue;
+
+    const coinLeft = coin.x;
+    const coinRight = coin.x + COIN_SIZE;
+    const coinTop = coin.y;
+    const coinBottom = coin.y + COIN_SIZE;
+
+    // Check if rabbit overlaps with coin
+    if (
+      rabbitRight > coinLeft &&
+      rabbitLeft < coinRight &&
+      rabbitBottom > coinTop &&
+      rabbitTop < coinBottom
+    ) {
+      collectedCoinIds.push(coin.id);
+    }
+  }
+
+  return collectedCoinIds;
 };

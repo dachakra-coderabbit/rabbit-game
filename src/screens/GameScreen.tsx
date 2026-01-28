@@ -11,10 +11,11 @@ import { GAME_WIDTH, GAME_HEIGHT } from '../constants/game';
 import { Background } from '../components/Background';
 import { RabbitCharacter } from '../components/RabbitCharacter';
 import { HurdleObstacle } from '../components/HurdleObstacle';
+import { CoinItem } from '../components/CoinItem';
 import { useGameLoop } from '../hooks/useGameLoop';
 
 export const GameScreen: React.FC = () => {
-  const { gameState, score, rabbit, hurdles, jump, restart } = useGameLoop();
+  const { gameState, score, rabbit, hurdles, coins, jump, restart } = useGameLoop();
 
   return (
     <View style={styles.container}>
@@ -25,6 +26,11 @@ export const GameScreen: React.FC = () => {
         {/* Hurdles */}
         {hurdles.map((hurdle) => (
           <HurdleObstacle key={hurdle.id} hurdle={hurdle} />
+        ))}
+
+        {/* Coins */}
+        {coins.map((coin) => (
+          <CoinItem key={coin.id} coin={coin} />
         ))}
 
         {/* Rabbit */}
