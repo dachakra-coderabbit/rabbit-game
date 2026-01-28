@@ -93,9 +93,12 @@ export const useGameLoop = () => {
 
           // Add new hurdle if needed
           if (filteredHurdles.length < 3) {
+            // Safe spawn position: use last hurdle's position if available, otherwise use fallback
             const lastHurdle = filteredHurdles[filteredHurdles.length - 1];
+            const spawnX = lastHurdle ? lastHurdle.x + HURDLE_SPACING : GAME_WIDTH + HURDLE_SPACING;
+
             filteredHurdles.push(
-              generateHurdle(lastHurdle.x + HURDLE_SPACING, hurdleIdCounter.current++)
+              generateHurdle(spawnX, hurdleIdCounter.current++)
             );
           }
 
@@ -113,9 +116,12 @@ export const useGameLoop = () => {
 
           // Add new coin if needed
           if (filteredCoins.length < 3) {
+            // Safe spawn position: use last coin's position if available, otherwise use fallback
             const lastCoin = filteredCoins[filteredCoins.length - 1];
+            const spawnX = lastCoin ? lastCoin.x + HURDLE_SPACING : GAME_WIDTH + HURDLE_SPACING;
+
             filteredCoins.push(
-              generateCoin(lastCoin.x + HURDLE_SPACING, coinIdCounter.current++)
+              generateCoin(spawnX, coinIdCounter.current++)
             );
           }
 
