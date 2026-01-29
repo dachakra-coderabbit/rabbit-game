@@ -15,7 +15,7 @@ import { CoinItem } from '../components/CoinItem';
 import { useGameLoop } from '../hooks/useGameLoop';
 
 export const GameScreen: React.FC = () => {
-  const { gameState, score, rabbit, hurdles, coins, jump, restart } = useGameLoop();
+  const { gameState, score, highScore, rabbit, hurdles, coins, jump, restart } = useGameLoop();
 
   return (
     <View style={styles.container}>
@@ -41,6 +41,12 @@ export const GameScreen: React.FC = () => {
           <Text style={styles.scoreText}>{score}</Text>
         </View>
 
+        {/* High Score */}
+        <View style={styles.highScoreContainer}>
+          <Text style={styles.highScoreLabel}>Today's Best</Text>
+          <Text style={styles.highScoreText}>{highScore}</Text>
+        </View>
+
         {/* Start Screen */}
         {gameState === 'idle' && (
           <View style={styles.overlay}>
@@ -57,6 +63,7 @@ export const GameScreen: React.FC = () => {
           <View style={styles.overlay}>
             <Text style={styles.gameOverText}>Game Over!</Text>
             <Text style={styles.finalScore}>Score: {score}</Text>
+            <Text style={styles.todaysBest}>Today's Best: {highScore}</Text>
             <TouchableOpacity style={styles.restartButton} onPress={restart}>
               <Text style={styles.restartButtonText}>Play Again</Text>
             </TouchableOpacity>
@@ -95,6 +102,29 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     color: '#8B4513',
+  },
+  highScoreContainer: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(255, 215, 0, 0.9)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#B8860B',
+  },
+  highScoreLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#654321',
+    textAlign: 'center',
+  },
+  highScoreText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#654321',
+    textAlign: 'center',
   },
   overlay: {
     position: 'absolute',
@@ -139,7 +169,13 @@ const styles = StyleSheet.create({
   finalScore: {
     fontSize: 32,
     color: '#FFF',
+    marginBottom: 10,
+  },
+  todaysBest: {
+    fontSize: 24,
+    color: '#FFD700',
     marginBottom: 30,
+    fontWeight: 'bold',
   },
   restartButton: {
     backgroundColor: '#4CAF50',

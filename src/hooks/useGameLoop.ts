@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   INITIAL_RABBIT_X,
   INITIAL_RABBIT_Y,
@@ -16,6 +17,7 @@ import { applyGravity, checkCollision, generateHurdle, generateCoin, checkCoinCo
 export const useGameLoop = () => {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
   const [rabbit, setRabbit] = useState<Rabbit>({
     position: { x: INITIAL_RABBIT_X, y: INITIAL_RABBIT_Y },
     velocity: { x: 0, y: 0 },
@@ -27,6 +29,44 @@ export const useGameLoop = () => {
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const hurdleIdCounter = useRef(0);
   const coinIdCounter = useRef(0);
+
+  // Get today's date as a key for storing high score
+  const getTodayKey = () => {
+    const today = new Date();
+    return `highScore_${today.getFullYear()}_${today.getMonth() + 1}_${today.getDate()}`;
+  };
+
+  // Load today's high score from storage
+  const loadHighScore = useCallback(async () => {
+    try {
+      const key = getTodayKey();
+      const storedScore = await AsyncStorage.getItem(key);
+      if (storedScore !== null) {
+        setHighScore(parseInt(storedScore, 10));
+      } else {
+        setHighScore(0);
+      }
+    } catch (error) {
+      console.error('Error loading high score:', error);
+      setHighScore(0);
+    }
+  }, []);
+
+  // Save high score to storage if current score is higher
+  const saveHighScore = useCallback(async (currentScore: number) => {
+    try {
+      const key = getTodayKey();
+      const storedScore = await AsyncStorage.getItem(key);
+      const currentHighScore = storedScore ? parseInt(storedScore, 10) : 0;
+
+      if (currentScore > currentHighScore) {
+        await AsyncStorage.setItem(key, currentScore.toString());
+        setHighScore(currentScore);
+      }
+    } catch (error) {
+      console.error('Error saving high score:', error);
+    }
+  }, []);
 
   const initializeGame = useCallback(() => {
     setRabbit({
@@ -173,13 +213,27 @@ export const useGameLoop = () => {
     }
   }, [rabbit, coins, gameState]);
 
+  // Save high score when game ends
+  useEffect(() => {
+    if (gameState === 'gameOver') {
+      saveHighScore(score);
+    }
+  }, [gameState, score, saveHighScore]);
+
+  // Initialize game on mount
   useEffect(() => {
     initializeGame();
   }, []);
 
+  // Load high score on mount
+  useEffect(() => {
+    loadHighScore();
+  }, [loadHighScore]);
+
   return {
     gameState,
     score,
+    highScore,
     rabbit,
     hurdles,
     coins,
