@@ -21,4 +21,14 @@ export interface Hurdle {
   passed: boolean;
 }
 
+export type CoinLabel = 'MCP' | 'Ticket' | 'Cloned Repo' | 'Learning' | '.MD files' | 'SAST' | 'CodeRabbit Configs';
+
+export interface Coin {
+  id: string;
+  x: number;
+  y: number;
+  label: CoinLabel;
+  collected: boolean;
+}
+
 export type GameState = 'idle' | 'playing' | 'gameOver';
