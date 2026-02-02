@@ -22,7 +22,7 @@ export const GameScreen: React.FC = () => {
   const testSentryError = () => {
     try {
       // Create a test error with a meaningful message and stack trace
-      const testError = new Error('Test error from Rabbit Game - This is intentional for testing Sentry source maps');
+      const testError = new Error('Sending in a test error');
 
       // Add some context data
       Sentry.captureException(testError, {
