@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as Sentry from '@sentry/react-native';
 import { GAME_WIDTH, GAME_HEIGHT } from '../constants/game';
 import { Background } from '../components/Background';
 import { RabbitCharacter } from '../components/RabbitCharacter';
@@ -16,6 +17,35 @@ import { useGameLoop } from '../hooks/useGameLoop';
 
 export const GameScreen: React.FC = () => {
   const { gameState, score, highScore, rabbit, hurdles, coins, jump, restart } = useGameLoop();
+  const [sentryTestMessage, setSentryTestMessage] = useState<string | null>(null);
+
+  const testSentryError = () => {
+    try {
+      // Create a test error with a meaningful message and stack trace
+      const testError = new Error('Test error from Rabbit Game - This is intentional for testing Sentry source maps');
+
+      // Add some context data
+      Sentry.captureException(testError, {
+        tags: {
+          test: 'sentry-sourcemap-test',
+          game_state: gameState,
+        },
+        extra: {
+          current_score: score,
+          high_score: highScore,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      // Show visual confirmation
+      setSentryTestMessage('✓ Error sent to Sentry!');
+      setTimeout(() => setSentryTestMessage(null), 3000);
+
+      console.log('Test error captured and sent to Sentry');
+    } catch (error) {
+      console.error('Failed to send test error:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -46,6 +76,22 @@ export const GameScreen: React.FC = () => {
           <Text style={styles.highScoreLabel}>Today's Best</Text>
           <Text style={styles.highScoreText}>{highScore}</Text>
         </View>
+
+        {/* Sentry Test Button */}
+        <TouchableOpacity
+          style={styles.sentryTestButton}
+          onPress={testSentryError}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.sentryTestButtonText}>Test Sentry</Text>
+        </TouchableOpacity>
+
+        {/* Sentry Test Confirmation Message */}
+        {sentryTestMessage && (
+          <View style={styles.sentryTestMessage}>
+            <Text style={styles.sentryTestMessageText}>{sentryTestMessage}</Text>
+          </View>
+        )}
 
         {/* Start Screen */}
         {gameState === 'idle' && (
@@ -187,6 +233,39 @@ const styles = StyleSheet.create({
   },
   restartButtonText: {
     fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  sentryTestButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    backgroundColor: 'rgba(255, 87, 34, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#D84315',
+  },
+  sentryTestButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#FFF',
+    textAlign: 'center',
+  },
+  sentryTestMessage: {
+    position: 'absolute',
+    top: 120,
+    left: 20,
+    backgroundColor: 'rgba(76, 175, 80, 0.95)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  sentryTestMessageText: {
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#FFF',
   },
