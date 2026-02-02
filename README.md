@@ -39,8 +39,15 @@ npm run ios
 # Android
 npm run android
 
-# Web
+# Web (Development)
 npm run web
+
+# Web (Production Build)
+npm run build:web
+# Then serve the dist folder:
+npx serve dist
+# Or use Python:
+# cd dist && python3 -m http.server 8000
 ```
 
 ## How to Play
@@ -104,18 +111,27 @@ You can customize the game by modifying constants in [src/constants/game.ts](src
 
 ### iOS
 ```bash
-expo build:ios
+npm run build:ios
 ```
 
 ### Android
 ```bash
-expo build:android
+npm run build:android
 ```
 
 ### Web
 ```bash
-expo build:web
+# Build and upload source maps to Sentry
+npm run build:web
+
+# Serve the production build locally
+npx serve dist
+
+# Or use Python's HTTP server
+cd dist && python3 -m http.server 8000
 ```
+
+**Note:** The production build includes source maps that are automatically uploaded to Sentry for error tracking. Access the build at `http://localhost:8000` (or the port shown by your server).
 
 ## License
 
