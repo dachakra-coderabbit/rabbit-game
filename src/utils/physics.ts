@@ -53,17 +53,22 @@ export const applyGravity = (rabbit: Rabbit): Rabbit => {
 };
 
 export const checkCollision = (rabbit: Rabbit, hurdles: Hurdle[]): boolean => {
-  const rabbitLeft = rabbit.position.x;
-  const rabbitRight = rabbit.position.x + RABBIT_WIDTH;
-  const rabbitTop = rabbit.position.y;
-  const rabbitBottom = rabbit.position.y + RABBIT_HEIGHT;
+  // Add padding to make collision detection more forgiving and accurate to the visual shapes
+  // Both characters are rounded, so we need to shrink the hitboxes
+  const RABBIT_COLLISION_PADDING = 10; // Reduces hitbox by 10px on each side
+  const HURDLE_COLLISION_PADDING = 8; // Reduces hitbox by 8px on each side
+
+  const rabbitLeft = rabbit.position.x + RABBIT_COLLISION_PADDING;
+  const rabbitRight = rabbit.position.x + RABBIT_WIDTH - RABBIT_COLLISION_PADDING;
+  const rabbitTop = rabbit.position.y + RABBIT_COLLISION_PADDING;
+  const rabbitBottom = rabbit.position.y + RABBIT_HEIGHT - RABBIT_COLLISION_PADDING;
 
   // Check hurdle collision - ground-based obstacles
   for (const hurdle of hurdles) {
-    const hurdleLeft = hurdle.x;
-    const hurdleRight = hurdle.x + HURDLE_WIDTH;
-    const hurdleTop = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height;
-    const hurdleBottom = GAME_HEIGHT - GROUND_HEIGHT;
+    const hurdleLeft = hurdle.x + HURDLE_COLLISION_PADDING;
+    const hurdleRight = hurdle.x + HURDLE_WIDTH - HURDLE_COLLISION_PADDING;
+    const hurdleTop = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height + HURDLE_COLLISION_PADDING;
+    const hurdleBottom = GAME_HEIGHT - GROUND_HEIGHT - HURDLE_COLLISION_PADDING;
 
     // Check if rabbit overlaps with hurdle horizontally
     if (rabbitRight > hurdleLeft && rabbitLeft < hurdleRight) {
