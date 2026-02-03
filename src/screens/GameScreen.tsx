@@ -21,21 +21,9 @@ export const GameScreen: React.FC = () => {
 
   const testSentryError = () => {
     try {
-      // Create a test error with a meaningful message and stack trace
-      const testError = new Error('Sending in a test error');
 
       // Add some context data
-      Sentry.captureException(testError, {
-        tags: {
-          test: 'sentry-sourcemap-test',
-          game_state: gameState,
-        },
-        extra: {
-          current_score: score,
-          high_score: highScore,
-          timestamp: new Date().toISOString(),
-        },
-      });
+      Sentry.captureException( new Error('Application Failed'));
 
       // Show visual confirmation
       setSentryTestMessage('✓ Error sent to Sentry!');
