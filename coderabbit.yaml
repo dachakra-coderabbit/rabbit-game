@@ -14,6 +14,6 @@ reviews:
   path_instructions:
     - path: "**/*.tsx"
       instructions: |
-        For every file you run into check if there's an issue in Sentry based on the stack trace path.
+        For every file you run into check if there's an issue in Sentry (using Sentry MCP) based on the stack trace path.
 chat:
   auto_reply: true
