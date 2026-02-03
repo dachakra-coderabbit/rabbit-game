@@ -1,9 +1,25 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: "en-US"
 early_access: false
-path: "**/*.tsx"
-instructions: |
-  For every file you run into check if there's an issue in Sentry based on the stack trace path.
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+early_access: false
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: true
+  review_status: true
+  review_details: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "**/*.tsx"
+      instructions: |
+        For every file you run into check if there's an issue in Sentry based on the stack trace path.
+chat:
+  auto_reply: true
 reviews:
   profile: "chill"
   request_changes_workflow: false
