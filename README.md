@@ -1,3 +1,4 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/dachakra-coderabbit/rabbit-game?utm_source=oss&utm_medium=github&utm_campaign=dachakra-coderabbit%2Frabbit-game&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 # Rabbit Jump Game
 
 A fun Flappy Bird-style game featuring a cute rabbit jumping through hurdles on grass! Built with React Native and Expo for cross-platform deployment on iOS, Android, and Web.
