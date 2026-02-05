@@ -65,22 +65,6 @@ export const GameScreen: React.FC = () => {
           <Text style={styles.highScoreText}>{highScore}</Text>
         </View>
 
-        {/* Sentry Test Button */}
-        <TouchableOpacity
-          style={styles.sentryTestButton}
-          onPress={testSentryError}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.sentryTestButtonText}>Test Sentry</Text>
-        </TouchableOpacity>
-
-        {/* Sentry Test Confirmation Message */}
-        {sentryTestMessage && (
-          <View style={styles.sentryTestMessage}>
-            <Text style={styles.sentryTestMessageText}>{sentryTestMessage}</Text>
-          </View>
-        )}
-
         {/* Start Screen */}
         {gameState === 'idle' && (
           <View style={styles.overlay}>
@@ -98,8 +82,25 @@ export const GameScreen: React.FC = () => {
             <Text style={styles.gameOverText}>Game Over!</Text>
             <Text style={styles.finalScore}>Score: {score}</Text>
             <Text style={styles.todaysBest}>Today's Best: {highScore}</Text>
+
+            {/* Sentry Test Confirmation Message */}
+            {sentryTestMessage && (
+              <View style={styles.sentryTestMessageGameOver}>
+                <Text style={styles.sentryTestMessageText}>{sentryTestMessage}</Text>
+              </View>
+            )}
+
             <TouchableOpacity style={styles.restartButton} onPress={restart}>
               <Text style={styles.restartButtonText}>Play Again</Text>
+            </TouchableOpacity>
+
+            {/* Sentry Test Button */}
+            <TouchableOpacity
+              style={styles.sentryTestButtonGameOver}
+              onPress={testSentryError}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.sentryTestButtonText}>Report Error to Sentry</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -224,33 +225,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFF',
   },
-  sentryTestButton: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
+  sentryTestButtonGameOver: {
     backgroundColor: 'rgba(255, 87, 34, 0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 20,
     borderWidth: 2,
     borderColor: '#D84315',
+    marginTop: 15,
   },
   sentryTestButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#FFF',
     textAlign: 'center',
   },
-  sentryTestMessage: {
-    position: 'absolute',
-    top: 120,
-    left: 20,
+  sentryTestMessageGameOver: {
     backgroundColor: 'rgba(76, 175, 80, 0.95)',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: '#4CAF50',
+    marginBottom: 10,
   },
   sentryTestMessageText: {
     fontSize: 14,
