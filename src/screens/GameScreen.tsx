@@ -26,7 +26,7 @@ export const GameScreen: React.FC = () => {
       Sentry.captureException( new Error('Application Failed'));
 
       // Show visual confirmation
-      setSentryTestMessage('✓ Error sent to Sentry!');
+      setSentryTestMessage('✓ Error sent to Sentry!!!!');
       setTimeout(() => setSentryTestMessage(null), 3000);
 
       console.log('Test error captured and sent to Sentry');
