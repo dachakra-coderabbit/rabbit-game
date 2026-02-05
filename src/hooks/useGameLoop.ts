@@ -74,15 +74,17 @@ export const useGameLoop = () => {
       velocity: { x: 0, y: 0 },
       rotation: 0,
     });
+    // Start hurdles closer to make the game start faster
+    const firstHurdleX = GAME_WIDTH * 0.5; // First hurdle at 50% of screen width
     setHurdles([
-      generateHurdle(GAME_WIDTH, hurdleIdCounter.current++),
-      generateHurdle(GAME_WIDTH + HURDLE_SPACING, hurdleIdCounter.current++),
-      generateHurdle(GAME_WIDTH + HURDLE_SPACING * 2, hurdleIdCounter.current++),
+      generateHurdle(firstHurdleX, hurdleIdCounter.current++),
+      generateHurdle(firstHurdleX + HURDLE_SPACING, hurdleIdCounter.current++),
+      generateHurdle(firstHurdleX + HURDLE_SPACING * 2, hurdleIdCounter.current++),
     ]);
     setCoins([
-      generateCoin(GAME_WIDTH + HURDLE_SPACING * 0.5, coinIdCounter.current++),
-      generateCoin(GAME_WIDTH + HURDLE_SPACING * 1.5, coinIdCounter.current++),
-      generateCoin(GAME_WIDTH + HURDLE_SPACING * 2.5, coinIdCounter.current++),
+      generateCoin(firstHurdleX + HURDLE_SPACING * 0.5, coinIdCounter.current++),
+      generateCoin(firstHurdleX + HURDLE_SPACING * 1.5, coinIdCounter.current++),
+      generateCoin(firstHurdleX + HURDLE_SPACING * 2.5, coinIdCounter.current++),
     ]);
     setScore(0);
   }, []);
