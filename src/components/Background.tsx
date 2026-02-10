@@ -10,8 +10,7 @@ interface BackgroundProps {
 export const Background: React.FC<BackgroundProps> = ({ isPlaying = false }) => {
   const [groundOffset, setGroundOffset] = useState(0);
   const [cloudOffset, setCloudOffset] = useState(0);
-  const zero = 0;
-  const new_forumla= 5 / zero;
+
   useEffect(() => {
     if (!isPlaying) {
       return;
