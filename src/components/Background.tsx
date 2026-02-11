@@ -10,7 +10,7 @@ interface BackgroundProps {
 export const Background: React.FC<BackgroundProps> = ({ isPlaying = false }) => {
   const [groundOffset, setGroundOffset] = useState(0);
   const [cloudOffset, setCloudOffset] = useState(0);
-
+  const x = 5 /0;
   useEffect(() => {
     if (!isPlaying) {
       return;
