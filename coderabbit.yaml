@@ -12,8 +12,10 @@ reviews:
     enabled: true
     drafts: false
   path_instructions:
-    - path: "**/**"
+    - path: '**/*.ts'
       instructions: |
+        - At the start of EVERY PR review, run a Sentry check using the Sentry MCP. 
+        clear, inline comment explaining why it's necessary.
         At the start of EVERY PR review, run a Sentry check using the Sentry MCP.
         Steps:
         1) Query Sentry for NEW or REGRESSED issues in environment=production over the last 7 days.
@@ -28,6 +30,6 @@ reviews:
            - Minimal fix suggestion (guard, fallback, validation, error boundary, etc.)
            - A regression test proposal aligned to the Sentry repro context
            - If root cause is unclear, propose instrumentation (tags/breadcrumbs) to improve future debugging.
-        5) If no relevant Sentry issues are found, state: "Sentry check: no relevant new/regressed production issues in the last 7 days."
+        5) If no relevant Sentry issues are found, state: "Sentry check: no relevant new/regressed production issues in the last 7 days.
 chat:
   auto_reply: true
