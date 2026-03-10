@@ -12,8 +12,22 @@ reviews:
     enabled: true
     drafts: false
   path_instructions:
-    - path: "**/*.tsx"
+    - path: "**/**"
       instructions: |
-        For every file you run into check if there's an issue in Sentry (using Sentry MCP) based on the stack trace path.
+        At the start of EVERY PR review, run a Sentry check using the Sentry MCP.
+        Steps:
+        1) Query Sentry for NEW or REGRESSED issues in environment=production over the last 7 days.
+        2) Prefer issues whose stack traces reference files changed in this PR.
+        3) If matches exist, add a PR comment that includes for each issue:
+           - Issue title
+           - Frequency and trend (spiking vs stable)
+           - First seen / last seen
+           - Direct Sentry link
+           - Most relevant stack frames and the file/line mapping
+        4) Provide an actionable recommendation:
+           - Minimal fix suggestion (guard, fallback, validation, error boundary, etc.)
+           - A regression test proposal aligned to the Sentry repro context
+           - If root cause is unclear, propose instrumentation (tags/breadcrumbs) to improve future debugging.
+        5) If no relevant Sentry issues are found, state: "Sentry check: no relevant new/regressed production issues in the last 7 days."
 chat:
   auto_reply: true
