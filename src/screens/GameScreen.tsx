@@ -13,10 +13,11 @@ import { Background } from '../components/Background';
 import { RabbitCharacter } from '../components/RabbitCharacter';
 import { HurdleObstacle } from '../components/HurdleObstacle';
 import { CoinItem } from '../components/CoinItem';
+import { SuperCarrotItem } from '../components/SuperCarrotItem';
 import { useGameLoop } from '../hooks/useGameLoop';
 
 export const GameScreen: React.FC = () => {
-  const { gameState, score, highScore, rabbit, hurdles, coins, jump, restart } = useGameLoop();
+  const { gameState, score, highScore, rabbit, hurdles, coins, superCarrot, jump, restart } = useGameLoop();
   const [sentryTestMessage, setSentryTestMessage] = useState<string | null>(null);
 
   const testSentryError = () => {
@@ -50,6 +51,11 @@ export const GameScreen: React.FC = () => {
         {coins.map((coin) => (
           <CoinItem key={coin.id} coin={coin} />
         ))}
+
+        {/* Super Carrot */}
+        {superCarrot && !superCarrot.collected && (
+          <SuperCarrotItem superCarrot={superCarrot} />
+        )}
 
         {/* Rabbit */}
         <RabbitCharacter rabbit={rabbit} />
