@@ -7,8 +7,9 @@ import {
   HURDLE_HEIGHT,
   GAME_HEIGHT,
   GROUND_HEIGHT,
+  SUPER_CARROT_SIZE,
 } from '../constants/game';
-import { Rabbit, Hurdle, Coin, CoinLabel } from '../types/game';
+import { Rabbit, Hurdle, Coin, CoinLabel, SuperCarrot } from '../types/game';
 
 const COIN_LABELS: CoinLabel[] = [
   'MCP',
@@ -63,12 +64,13 @@ export const checkCollision = (rabbit: Rabbit, hurdles: Hurdle[]): boolean => {
   const rabbitTop = rabbit.position.y + RABBIT_COLLISION_PADDING;
   const rabbitBottom = rabbit.position.y + RABBIT_HEIGHT - RABBIT_COLLISION_PADDING;
 
-  // Check hurdle collision - ground-based obstacles
+  // Check hurdle collision - ground-based obstacles (verticalOffset for moving hurdles)
   for (const hurdle of hurdles) {
     const hurdleLeft = hurdle.x + HURDLE_COLLISION_PADDING;
     const hurdleRight = hurdle.x + HURDLE_WIDTH - HURDLE_COLLISION_PADDING;
-    const hurdleTop = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height + HURDLE_COLLISION_PADDING;
-    const hurdleBottom = GAME_HEIGHT - GROUND_HEIGHT - HURDLE_COLLISION_PADDING;
+    const offsetY = hurdle.verticalOffset ?? 0;
+    const hurdleTop = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height + offsetY + HURDLE_COLLISION_PADDING;
+    const hurdleBottom = GAME_HEIGHT - GROUND_HEIGHT + offsetY - HURDLE_COLLISION_PADDING;
 
     // Check if rabbit overlaps with hurdle horizontally
     if (rabbitRight > hurdleLeft && rabbitLeft < hurdleRight) {
@@ -82,16 +84,25 @@ export const checkCollision = (rabbit: Rabbit, hurdles: Hurdle[]): boolean => {
   return false;
 };
 
-export const generateHurdle = (lastHurdleX: number, id: number): Hurdle => {
+export const generateHurdle = (
+  lastHurdleX: number,
+  id: number,
+  movingChance: number
+): Hurdle => {
   const minHeight = 30;
   const maxHeight = 80;
   const height = Math.random() * (maxHeight - minHeight) + minHeight;
+  const isMoving = Math.random() < movingChance;
+  const verticalPhase = Math.random() * 2 * Math.PI;
 
   return {
     id: id.toString(),
     x: lastHurdleX,
     height,
     passed: false,
+    isMoving,
+    verticalOffset: 0,
+    verticalPhase,
   };
 };
 
@@ -110,6 +121,40 @@ export const generateCoin = (x: number, id: number): Coin => {
     label: randomLabel,
     collected: false,
   };
+};
+
+export const generateSuperCarrot = (x: number, id: number): SuperCarrot => {
+  const minY = GAME_HEIGHT - GROUND_HEIGHT - 200;
+  const maxY = GAME_HEIGHT - GROUND_HEIGHT - 100;
+  const y = Math.random() * (maxY - minY) + minY;
+
+  return {
+    id: id.toString(),
+    x,
+    y,
+    collected: false,
+  };
+};
+
+export const checkSuperCarrotCollision = (rabbit: Rabbit, superCarrot: SuperCarrot | null): boolean => {
+  if (!superCarrot || superCarrot.collected) return false;
+
+  const rabbitLeft = rabbit.position.x;
+  const rabbitRight = rabbit.position.x + RABBIT_WIDTH;
+  const rabbitTop = rabbit.position.y;
+  const rabbitBottom = rabbit.position.y + RABBIT_HEIGHT;
+
+  const carrotLeft = superCarrot.x;
+  const carrotRight = superCarrot.x + SUPER_CARROT_SIZE;
+  const carrotTop = superCarrot.y;
+  const carrotBottom = superCarrot.y + SUPER_CARROT_SIZE;
+
+  return (
+    rabbitRight > carrotLeft &&
+    rabbitLeft < carrotRight &&
+    rabbitBottom > carrotTop &&
+    rabbitTop < carrotBottom
+  );
 };
 
 export const checkCoinCollision = (rabbit: Rabbit, coins: Coin[]): string[] => {

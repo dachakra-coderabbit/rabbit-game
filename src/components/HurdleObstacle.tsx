@@ -9,7 +9,8 @@ interface HurdleObstacleProps {
 }
 
 export const HurdleObstacle: React.FC<HurdleObstacleProps> = ({ hurdle }) => {
-  const hurdleY = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height;
+  const offsetY = hurdle.verticalOffset ?? 0;
+  const hurdleY = GAME_HEIGHT - GROUND_HEIGHT - hurdle.height + offsetY;
 
   const viewBoxSize = 60;
 
