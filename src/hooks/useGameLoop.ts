@@ -13,24 +13,54 @@ import {
   GAME_HEIGHT,
   GROUND_HEIGHT,
   RABBIT_HEIGHT,
+  RABBIT_WIDTH,
+  MAX_RABBITS,
   SUPER_CARROT_DURATION,
   SUPER_CARROT_SPAWN_RATE,
   SUPER_CARROT_MIN_OBSTACLE,
   SUPER_CARROT_SIZE,
 } from '../constants/game';
 import { Rabbit, Hurdle, Coin, GameState, SuperCarrot } from '../types/game';
-import { applyGravity, checkCollision, generateHurdle, generateCoin, checkCoinCollision, generateSuperCarrot, checkSuperCarrotCollision } from '../utils/physics';
+import {
+  applyGravity,
+  checkCollision,
+  generateHurdle,
+  generateCoin,
+  checkCoinCollision,
+  generateSuperCarrot,
+  checkSuperCarrotCollision,
+} from '../utils/physics';
+
+const makeRabbit = (x: number): Rabbit => ({
+  position: { x, y: INITIAL_RABBIT_Y },
+  velocity: { x: 0, y: 0 },
+  rotation: 0,
+  isInvincible: false,
+});
+
+/** Evenly space rabbit spawn x positions across the left lane (can overlap when count is huge). */
+const computeRabbitSpawnXs = (count: number): number[] => {
+  const n = Math.min(Math.max(1, count), MAX_RABBITS);
+  if (n === 1) return [INITIAL_RABBIT_X];
+  const leftMin = GAME_WIDTH * 0.04;
+  const rightBound = GAME_WIDTH * 0.52;
+  const maxLastLeft = rightBound - RABBIT_WIDTH;
+  const rawStep = (maxLastLeft - leftMin) / (n - 1);
+  const step = Math.max(4, rawStep);
+  return Array.from({ length: n }, (_, i) => leftMin + i * step);
+};
+
+const makeRabbitsForCount = (count: number): Rabbit[] =>
+  computeRabbitSpawnXs(count).map((x) => makeRabbit(x));
+
+/** Leftmost rabbit x — used for scoring when a hurdle is “passed” */
+const passLineX = (rabbits: Rabbit[]) => Math.min(...rabbits.map((r) => r.position.x));
 
 export const useGameLoop = () => {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
-  const [rabbit, setRabbit] = useState<Rabbit>({
-    position: { x: INITIAL_RABBIT_X, y: INITIAL_RABBIT_Y },
-    velocity: { x: 0, y: 0 },
-    rotation: 0,
-    isInvincible: false,
-  });
+  const [rabbits, setRabbits] = useState<Rabbit[]>([makeRabbit(INITIAL_RABBIT_X)]);
   const [hurdles, setHurdles] = useState<Hurdle[]>([]);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [superCarrot, setSuperCarrot] = useState<SuperCarrot | null>(null);
@@ -41,17 +71,16 @@ export const useGameLoop = () => {
   const superCarrotIdCounter = useRef(0);
   const hurdlesSpawnedThisGame = useRef(0);
   const invincibilityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  // Refs for values needed inside the setInterval without stale closures
   const isInvincibleRef = useRef(false);
   const superCarrotActiveRef = useRef(false);
+  const rabbitsRef = useRef<Rabbit[]>(rabbits);
+  rabbitsRef.current = rabbits;
 
-  // Get today's date as a key for storing high score
   const getTodayKey = () => {
     const today = new Date();
     return `highScore_${today.getFullYear()}_${today.getMonth() + 1}_${today.getDate()}`;
   };
 
-  // Load today's high score from storage
   const loadHighScore = useCallback(async () => {
     try {
       const key = getTodayKey();
@@ -67,7 +96,6 @@ export const useGameLoop = () => {
     }
   }, []);
 
-  // Save high score to storage if current score is higher
   const saveHighScore = useCallback(async (currentScore: number) => {
     try {
       const key = getTodayKey();
@@ -83,8 +111,11 @@ export const useGameLoop = () => {
     }
   }, []);
 
-  const initializeGame = useCallback(() => {
-    // Clear invincibility timer and reset refs
+  const initializeGame = useCallback((options?: { rabbitCount?: number }) => {
+    const rabbitCount = Math.min(
+      MAX_RABBITS,
+      Math.max(1, options?.rabbitCount ?? 1)
+    );
     if (invincibilityTimerRef.current) {
       clearTimeout(invincibilityTimerRef.current);
       invincibilityTimerRef.current = null;
@@ -93,16 +124,10 @@ export const useGameLoop = () => {
     superCarrotActiveRef.current = false;
     hurdlesSpawnedThisGame.current = 0;
 
-    setRabbit({
-      position: { x: INITIAL_RABBIT_X, y: INITIAL_RABBIT_Y },
-      velocity: { x: 0, y: 0 },
-      rotation: 0,
-      isInvincible: false,
-    });
+    setRabbits(makeRabbitsForCount(rabbitCount));
     setSuperCarrot(null);
 
-    // Start hurdles closer to make the game start faster
-    const firstHurdleX = GAME_WIDTH * 0.5; // First hurdle at 50% of screen width
+    const firstHurdleX = GAME_WIDTH * 1.2;
     setHurdles([
       generateHurdle(firstHurdleX, hurdleIdCounter.current++, HURDLE_MOVING_CHANCE),
       generateHurdle(firstHurdleX + HURDLE_SPACING, hurdleIdCounter.current++, HURDLE_MOVING_CHANCE),
@@ -119,46 +144,49 @@ export const useGameLoop = () => {
   const jump = useCallback(() => {
     if (gameState === 'idle') {
       setGameState('playing');
-      initializeGame();
+      initializeGame({ rabbitCount: 1 });
     }
 
     if (gameState === 'playing') {
-      setRabbit((prev) => {
-        const groundY = GAME_HEIGHT - GROUND_HEIGHT - RABBIT_HEIGHT;
-        // Only allow jump when on the ground
-        if (prev.position.y >= groundY) {
-          return {
-            ...prev,
-            velocity: { ...prev.velocity, y: JUMP_VELOCITY },
-            rotation: -15,
-          };
-        }
-        return prev;
-      });
+      setRabbits((prev) =>
+        prev.map((r) => {
+          const groundY = GAME_HEIGHT - GROUND_HEIGHT - RABBIT_HEIGHT;
+          if (r.position.y >= groundY) {
+            return {
+              ...r,
+              velocity: { ...r.velocity, y: JUMP_VELOCITY },
+              rotation: -15,
+            };
+          }
+          return r;
+        })
+      );
     }
   }, [gameState, initializeGame]);
 
   const restart = useCallback(() => {
     setGameState('idle');
-    initializeGame();
+    initializeGame({ rabbitCount: 1 });
+  }, [initializeGame]);
+
+  const acceptDoubleAndPass = useCallback(() => {
+    const prev = rabbitsRef.current.length;
+    const nextCount = Math.min(MAX_RABBITS, Math.max(1, prev) * 2);
+    initializeGame({ rabbitCount: nextCount });
+    setGameState('playing');
   }, [initializeGame]);
 
   useEffect(() => {
     if (gameState === 'playing') {
       gameLoopRef.current = setInterval(() => {
-        setRabbit((prevRabbit) => {
-          const updatedRabbit = applyGravity(prevRabbit);
-          return updatedRabbit;
-        });
+        setRabbits((prevRabbits) => prevRabbits.map((r) => applyGravity(r)));
 
         setHurdles((prevHurdles) => {
           const updatedHurdles = prevHurdles.map((hurdle) => {
             const x = hurdle.x - HURDLE_SPEED;
             const isMoving = hurdle.isMoving ?? false;
             const phase = (hurdle.verticalPhase ?? 0) + HURDLE_BOUNCE_SPEED;
-            const verticalOffset = isMoving
-              ? HURDLE_BOUNCE_AMPLITUDE * Math.sin(phase)
-              : 0;
+            const verticalOffset = isMoving ? HURDLE_BOUNCE_AMPLITUDE * Math.sin(phase) : 0;
             return {
               ...hurdle,
               x,
@@ -167,20 +195,15 @@ export const useGameLoop = () => {
             };
           });
 
-          // Remove off-screen hurdles and add new ones
           const filteredHurdles = updatedHurdles.filter((hurdle) => hurdle.x > -100);
 
-          // Add new hurdle if needed
           if (filteredHurdles.length < 3) {
             const lastHurdle = filteredHurdles[filteredHurdles.length - 1];
             const spawnX = lastHurdle ? lastHurdle.x + HURDLE_SPACING : GAME_WIDTH + HURDLE_SPACING;
 
-            filteredHurdles.push(
-              generateHurdle(spawnX, hurdleIdCounter.current++, HURDLE_MOVING_CHANCE)
-            );
+            filteredHurdles.push(generateHurdle(spawnX, hurdleIdCounter.current++, HURDLE_MOVING_CHANCE));
             hurdlesSpawnedThisGame.current++;
 
-            // Conditionally spawn a super carrot
             if (
               !superCarrotActiveRef.current &&
               !isInvincibleRef.current &&
@@ -195,7 +218,6 @@ export const useGameLoop = () => {
           return filteredHurdles;
         });
 
-        // Move super carrot and clear if off-screen or collected
         setSuperCarrot((prev) => {
           if (!prev) return null;
           const newX = prev.x - HURDLE_SPEED;
@@ -212,33 +234,29 @@ export const useGameLoop = () => {
             x: coin.x - HURDLE_SPEED,
           }));
 
-          // Remove off-screen coins and add new ones
           const filteredCoins = updatedCoins.filter((coin) => coin.x > -100);
 
-          // Add new coin if needed
           if (filteredCoins.length < 3) {
             const lastCoin = filteredCoins[filteredCoins.length - 1];
             const spawnX = lastCoin ? lastCoin.x + HURDLE_SPACING : GAME_WIDTH + HURDLE_SPACING;
 
-            filteredCoins.push(
-              generateCoin(spawnX, coinIdCounter.current++)
-            );
+            filteredCoins.push(generateCoin(spawnX, coinIdCounter.current++));
           }
 
           return filteredCoins;
         });
 
-        // Update score
-        setHurdles((prevHurdles) => {
-          return prevHurdles.map((hurdle) => {
-            if (!hurdle.passed && hurdle.x + 60 < INITIAL_RABBIT_X) {
+        const lineX = passLineX(rabbitsRef.current);
+        setHurdles((prevHurdles) =>
+          prevHurdles.map((hurdle) => {
+            if (!hurdle.passed && hurdle.x + 60 < lineX) {
               setScore((prevScore) => prevScore + 1);
               return { ...hurdle, passed: true };
             }
             return hurdle;
-          });
-        });
-      }, 1000 / 60); // 60 FPS
+          })
+        );
+      }, 1000 / 60);
 
       return () => {
         if (gameLoopRef.current) {
@@ -248,85 +266,90 @@ export const useGameLoop = () => {
     }
   }, [gameState]);
 
-  // Check hurdle collision — skipped while invincible
   useEffect(() => {
     if (gameState === 'playing') {
-      if (!rabbit.isInvincible && checkCollision(rabbit, hurdles)) {
+      const anyHit = rabbits.some((r) => !r.isInvincible && checkCollision(r, hurdles));
+      if (anyHit) {
         setGameState('gameOver');
       }
     }
-  }, [rabbit, hurdles, gameState]);
+  }, [rabbits, hurdles, gameState]);
 
-  // Check super carrot collection
   useEffect(() => {
     if (gameState === 'playing' && superCarrot && !superCarrot.collected && !isInvincibleRef.current) {
-      if (checkSuperCarrotCollision(rabbit, superCarrot)) {
+      const anyCollects = rabbits.some((r) => checkSuperCarrotCollision(r, superCarrot));
+      if (anyCollects) {
         setSuperCarrot(null);
         superCarrotActiveRef.current = false;
 
         isInvincibleRef.current = true;
-        setRabbit((prev) => ({ ...prev, isInvincible: true }));
+        setRabbits((prev) => prev.map((r) => ({ ...r, isInvincible: true })));
 
         if (invincibilityTimerRef.current) {
           clearTimeout(invincibilityTimerRef.current);
         }
         invincibilityTimerRef.current = setTimeout(() => {
           isInvincibleRef.current = false;
-          setRabbit((prev) => ({ ...prev, isInvincible: false }));
+          setRabbits((prev) => prev.map((r) => ({ ...r, isInvincible: false })));
           invincibilityTimerRef.current = null;
         }, SUPER_CARROT_DURATION);
       }
     }
-  }, [rabbit, superCarrot, gameState]);
+  }, [rabbits, superCarrot, gameState]);
 
-  // Check coin collection
   useEffect(() => {
     if (gameState === 'playing') {
-      const collectedCoinIds = checkCoinCollision(rabbit, coins);
+      const idSet = new Set<string>();
+      for (const r of rabbits) {
+        for (const id of checkCoinCollision(r, coins)) {
+          idSet.add(id);
+        }
+      }
+      const collectedCoinIds = [...idSet];
       if (collectedCoinIds.length > 0) {
         setCoins((prevCoins) =>
           prevCoins.map((coin) =>
             collectedCoinIds.includes(coin.id) ? { ...coin, collected: true } : coin
           )
         );
-        // Add 10 points for each coin collected
-        setScore((prevScore) => prevScore + (collectedCoinIds.length * 10));
+        setScore((prevScore) => prevScore + collectedCoinIds.length * 10);
       }
     }
-  }, [rabbit, coins, gameState]);
+  }, [rabbits, coins, gameState]);
 
-  // Save high score when game ends
   useEffect(() => {
     if (gameState === 'gameOver') {
-      // Clear invincibility on game over
       if (invincibilityTimerRef.current) {
         clearTimeout(invincibilityTimerRef.current);
         invincibilityTimerRef.current = null;
       }
       isInvincibleRef.current = false;
+      setRabbits((prev) => prev.map((r) => ({ ...r, isInvincible: false })));
       saveHighScore(score);
     }
   }, [gameState, score, saveHighScore]);
 
-  // Initialize game on mount
   useEffect(() => {
-    initializeGame();
-  }, []);
+    initializeGame({ rabbitCount: 1 });
+  }, [initializeGame]);
 
-  // Load high score on mount
   useEffect(() => {
     loadHighScore();
   }, [loadHighScore]);
+
+  const nextDoubleRabbitCount = Math.min(MAX_RABBITS, Math.max(1, rabbits.length) * 2);
 
   return {
     gameState,
     score,
     highScore,
-    rabbit,
+    rabbits,
+    nextDoubleRabbitCount,
     hurdles,
     coins,
     superCarrot,
     jump,
     restart,
+    acceptDoubleAndPass,
   };
 };

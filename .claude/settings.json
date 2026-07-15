@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/dannyabouchakra/.claude/**)",
+      "Read(//private/tmp/claude-plugin/.claude-plugin/**)",
+      "Read(//private/tmp/claude-plugin/**)",
+      "Read(//private/tmp/claude-plugin/commands/**)",
+      "Read(//private/tmp/claude-plugin/skills/**)",
+      "Read(//tmp/claude-plugin/commands/**)",
+      "Bash(coderabbit review *)"
+    ]
+  }
+}

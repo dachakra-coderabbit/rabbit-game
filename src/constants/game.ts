@@ -31,6 +31,8 @@ export const GRASS_HEIGHT = GROUND_HEIGHT;
 // Game constants
 export const INITIAL_RABBIT_X = GAME_WIDTH * 0.2;
 export const INITIAL_RABBIT_Y = GAME_HEIGHT - GROUND_HEIGHT - RABBIT_HEIGHT;
+/** Upper bound so “double it” cannot spawn more characters than the device can reasonably draw */
+export const MAX_RABBITS = 128;
 
 // Power-up constants
 export const SUPER_CARROT_DURATION = 4000;
