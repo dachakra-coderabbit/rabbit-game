@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Sentry from '@sentry/react-native';
-import { GAME_WIDTH, GAME_HEIGHT } from '../constants/game';
+import { GAME_WIDTH, GAME_HEIGHT, MAX_RABBITS } from '../constants/game';
 import { Background } from '../components/Background';
 import { RabbitCharacter } from '../components/RabbitCharacter';
 import { HurdleObstacle } from '../components/HurdleObstacle';
@@ -17,7 +17,19 @@ import { SuperCarrotItem } from '../components/SuperCarrotItem';
 import { useGameLoop } from '../hooks/useGameLoop';
 
 export const GameScreen: React.FC = () => {
-  const { gameState, score, highScore, rabbit, hurdles, coins, superCarrot, jump, restart } = useGameLoop();
+  const {
+    gameState,
+    score,
+    highScore,
+    rabbits,
+    nextDoubleRabbitCount,
+    hurdles,
+    coins,
+    superCarrot,
+    jump,
+    restart,
+    acceptDoubleAndPass,
+  } = useGameLoop();
   const [sentryTestMessage, setSentryTestMessage] = useState<string | null>(null);
 
   const testSentryError = () => {
@@ -57,8 +69,10 @@ export const GameScreen: React.FC = () => {
           <SuperCarrotItem superCarrot={superCarrot} />
         )}
 
-        {/* Rabbit */}
-        <RabbitCharacter rabbit={rabbit} />
+        {/* Rabbit(s) — count grows each time you accept “double it” */}
+        {rabbits.map((rabbit, index) => (
+          <RabbitCharacter key={index} rabbit={rabbit} />
+        ))}
 
         {/* Score */}
         <View style={styles.scoreContainer}>
@@ -77,7 +91,8 @@ export const GameScreen: React.FC = () => {
             <Text style={styles.title}>Rabbit Runner</Text>
             <Text style={styles.subtitle}>Tap to Start</Text>
             <Text style={styles.instructions}>
-              Tap anywhere to make the rabbit jump over obstacles!
+              Tap anywhere to jump. After game over, “double it” adds twice as many rabbits; they all jump
+              together.
             </Text>
           </View>
         )}
@@ -89,6 +104,20 @@ export const GameScreen: React.FC = () => {
             <Text style={styles.finalScore}>Score: {score}</Text>
             <Text style={styles.todaysBest}>Today's Best: {highScore}</Text>
 
+            <Text style={styles.doublePrompt}>
+              Double it and pass it to the next person? You had {rabbits.length} — Yes starts a new run with{' '}
+              {nextDoubleRabbitCount} rabbits, all jumping together
+              {Math.max(1, rabbits.length) * 2 > MAX_RABBITS ? ` (herd capped at ${MAX_RABBITS}).` : '.'}
+            </Text>
+            <View style={styles.doubleButtonRow}>
+              <TouchableOpacity style={styles.doubleYesButton} onPress={acceptDoubleAndPass}>
+                <Text style={styles.doubleYesButtonText}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.doubleNoButton} onPress={restart}>
+                <Text style={styles.doubleNoButtonText}>No</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Sentry Test Confirmation Message */}
             {sentryTestMessage && (
               <View style={styles.sentryTestMessageGameOver}>
@@ -97,7 +126,7 @@ export const GameScreen: React.FC = () => {
             )}
 
             <TouchableOpacity style={styles.restartButton} onPress={restart}>
-              <Text style={styles.restartButtonText}>Play Again</Text>
+              <Text style={styles.restartButtonText}>Play Again (one rabbit)</Text>
             </TouchableOpacity>
 
             {/* Sentry Test Button */}
@@ -215,8 +244,47 @@ const styles = StyleSheet.create({
   todaysBest: {
     fontSize: 24,
     color: '#FFD700',
-    marginBottom: 30,
+    marginBottom: 16,
     fontWeight: 'bold',
+  },
+  doublePrompt: {
+    fontSize: 16,
+    color: '#E0E0E0',
+    textAlign: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    lineHeight: 22,
+  },
+  doubleButtonRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  doubleYesButton: {
+    backgroundColor: '#7C4DFF',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#B39DDB',
+  },
+  doubleYesButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  doubleNoButton: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  doubleNoButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   restartButton: {
     backgroundColor: '#4CAF50',
